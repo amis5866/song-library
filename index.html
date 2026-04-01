@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Song Library</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>My Song Library</h1>
+    <input type="search" id="header-filter" placeholder="Filter by title, artist, or tag...">
+    <div class="header-actions">
+      <button id="btn-import-playlist" class="btn-import hidden">Import Playlist</button>
+      <button id="btn-settings" class="btn-settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- Tag sidebar -->
+    <aside id="sidebar">
+      <h2 class="sidebar-heading">Tags</h2>
+      <ul id="tag-list"></ul>
+    </aside>
+
+    <!-- Main content -->
+    <main>
+
+      <!-- Add song search -->
+      <div class="search-wrapper">
+        <input type="search" id="song-search-input" autocomplete="off" placeholder="Search for a song to add to your library...">
+        <div id="search-results" class="search-results hidden"></div>
+      </div>
+
+      <!-- Song list -->
+      <div id="song-grid"></div>
+      <p id="empty-state" class="empty-state hidden"></p>
+
+    </main>
+  </div>
+
+  <!-- ─── Add Song Modal ─────────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-song-title">
+    <div class="modal">
+      <div class="modal-preview">
+        <img id="modal-artwork" src="" alt="">
+        <div class="modal-meta">
+          <span id="modal-song-title" class="modal-song-title"></span>
+          <span id="modal-song-artist" class="modal-song-artist"></span>
+          <span id="modal-song-album" class="modal-song-album"></span>
+        </div>
+      </div>
+      <form id="add-form">
+        <label for="tags-input">
+          Tags <span class="label-hint">(optional — comma-separated)</span>
+        </label>
+        <input type="text" id="tags-input" placeholder="rock, 80s, guitar solo" autocomplete="off">
+
+        <!-- Spotify link section -->
+        <div class="spotify-link-section">
+          <label for="spotify-url-input" class="spotify-link-heading">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#1db954;vertical-align:middle;margin-right:5px"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+            Spotify link <span class="label-hint">(optional — paste track URL to enable in-app player)</span>
+          </label>
+          <div class="spotify-url-row">
+            <input type="url" id="spotify-url-input"
+              placeholder="https://open.spotify.com/track/..."
+              autocomplete="off">
+            <span id="spotify-url-status" class="spotify-url-status"></span>
+          </div>
+          <p class="spotify-url-hint">On Spotify: right-click any song → Share → Copy Song Link</p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Add to Library</button>
+          <button type="button" id="modal-cancel" class="btn-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── Settings Modal ────────────────────────────────────────────────────── -->
+  <div id="modal-settings" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
+    <div class="modal modal--wide">
+      <div class="modal-header">
+        <h2 id="settings-heading" class="modal-heading">Settings</h2>
+        <button id="btn-settings-close" class="btn-icon-close">&#215;</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">Spotify Integration</h3>
+
+        <div class="settings-setup-notice">
+          <strong>&#9432; Playlist import only — no login needed to add songs</strong>
+          <p style="margin-top:6px">To link a Spotify track when adding a song, just paste the Spotify URL in the add-song form — no account needed.</p>
+          <p style="margin-top:10px">Playlist bulk import requires Spotify login, which needs an <strong>HTTPS</strong> redirect URI. The easiest way:</p>
+          <p style="margin-top:6px"><strong>Option A — ngrok (free):</strong></p>
+          <code class="setup-code">npx serve . -p 8080</code>
+          <code class="setup-code" style="margin-top:4px">npx ngrok http 8080</code>
+          <p style="margin-top:4px">Copy the <code>https://xxxx.ngrok.io</code> URL as your Redirect URI.</p>
+          <p style="margin-top:10px"><strong>Option B — GitHub Pages (permanent HTTPS):</strong></p>
+          <p>Push the 3 files to a GitHub repo → enable Pages → use <code>https://username.github.io/repo/index.html</code>.</p>
+          <p style="margin-top:10px">Register the chosen HTTPS URL in <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Spotify Developer Dashboard</a> → your app → Edit → Redirect URIs.</p>
+        </div>
+
+        <div class="settings-status-row">
+          <span>Status:</span>
+          <span id="spotify-status-badge" class="status-badge status-badge--disconnected">Not connected</span>
+        </div>
+
+        <div id="settings-spotify-form" class="settings-form">
+          <label class="settings-label">
+            Client ID
+            <input type="text" id="input-spotify-client-id" placeholder="your_spotify_client_id" autocomplete="off">
+          </label>
+          <label class="settings-label">
+            Redirect URI
+            <span class="settings-label-hint">Copy this exact value into your Spotify Developer app's Redirect URIs list</span>
+            <div class="redirect-uri-row">
+              <input type="url" id="input-spotify-redirect-uri" placeholder="http://localhost:8080/index.html">
+              <button type="button" id="btn-copy-redirect-uri" class="btn-copy" title="Copy">&#10697;</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="settings-actions">
+          <button id="btn-connect-spotify" class="btn-primary">Connect Spotify</button>
+          <button id="btn-disconnect-spotify" class="btn-danger hidden">Disconnect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Import Playlist Modal ─────────────────────────────────────────────── -->
+  <div id="modal-import" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="import-heading">
+    <div class="modal modal--wide">
+      <div class="modal-header">
+        <h2 id="import-heading" class="modal-heading">Import from Spotify Playlist</h2>
+        <button id="btn-import-close" class="btn-icon-close">&#215;</button>
+      </div>
+
+      <div class="import-url-row">
+        <input type="url" id="input-playlist-url" placeholder="https://open.spotify.com/playlist/..." autocomplete="off">
+        <button id="btn-fetch-playlist" class="btn-primary">Fetch</button>
+      </div>
+      <div id="import-status" class="import-status"></div>
+
+      <div id="import-controls" class="import-controls hidden">
+        <button id="btn-select-all" class="btn-text">Select All</button>
+        <button id="btn-deselect-all" class="btn-text">Deselect All</button>
+      </div>
+
+      <ul id="import-track-list" class="import-track-list hidden"></ul>
+
+      <div class="import-footer">
+        <button id="btn-import-confirm" class="btn-primary" disabled>Add Songs</button>
+        <button id="btn-import-cancel" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Edit Song Modal ──────────────────────────────────────────────────── -->
+  <div id="modal-edit" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-heading">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="edit-heading" class="modal-heading">Edit Song</h2>
+        <button id="btn-edit-close" class="btn-icon-close">&#215;</button>
+      </div>
+      <form id="edit-form">
+        <label for="edit-title-input">Title</label>
+        <input type="text" id="edit-title-input" autocomplete="off">
+        <label for="edit-artist-input">Artist</label>
+        <input type="text" id="edit-artist-input" autocomplete="off">
+        <label for="edit-tags-input">
+          Tags <span class="label-hint">(comma-separated)</span>
+        </label>
+        <input type="text" id="edit-tags-input" placeholder="rock, 80s, guitar solo" autocomplete="off">
+        <div class="spotify-link-section">
+          <label for="edit-spotify-url-input" class="spotify-link-heading">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#1db954;vertical-align:middle;margin-right:5px"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+            Spotify link <span class="label-hint">(optional)</span>
+          </label>
+          <div class="spotify-url-row">
+            <input type="url" id="edit-spotify-url-input"
+              placeholder="https://open.spotify.com/track/..."
+              autocomplete="off">
+            <span id="edit-spotify-url-status" class="spotify-url-status"></span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-primary">Save</button>
+          <button type="button" id="edit-modal-cancel" class="btn-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── Player Bar ────────────────────────────────────────────────────────── -->
+  <div id="player-bar" class="player-bar hidden">
+    <div class="player-info">
+      <img id="player-artwork" class="player-artwork" src="" alt="">
+      <div class="player-meta">
+        <span id="player-title" class="player-title"></span>
+        <span id="player-artist" class="player-artist"></span>
+      </div>
+      <span class="player-preview-badge" id="player-mode-badge">preview</span>
+    </div>
+
+    <!-- iTunes custom controls -->
+    <div id="player-custom" class="player-custom">
+      <div class="player-controls">
+        <button id="btn-prev5" class="player-btn" title="Back 5 seconds (←)">&#171;5</button>
+        <button id="btn-playpause" class="player-btn player-btn-main" title="Play / Pause (Space)">&#9654;</button>
+        <button id="btn-next5" class="player-btn" title="Forward 5 seconds (→)">5&#187;</button>
+      </div>
+      <div class="player-progress">
+        <span id="player-time-current" class="player-time">0:00</span>
+        <input type="range" id="player-seek" class="player-seek" min="0" max="100" value="0" step="0.1">
+        <span id="player-time-total" class="player-time">0:30</span>
+      </div>
+    </div>
+
+    <!-- Spotify embed -->
+    <div id="player-spotify" class="player-spotify hidden">
+      <iframe id="spotify-embed-iframe"
+        src=""
+        width="100%"
+        height="90"
+        frameborder="0"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"></iframe>
+    </div>
+
+    <button id="player-close" class="player-close" title="Close player">&#215;</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
