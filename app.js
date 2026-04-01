@@ -225,6 +225,7 @@ let filterQuery  = '';
 let searchTimer  = null;
 let pendingResult = null;
 let editingSongId = null;
+let viewingSongId = null;
 
 const STORAGE_KEY = 'songLibrary';
 
@@ -457,6 +458,7 @@ function addSong(itunesResult, tags, spotifyTrackId) {
     genre:          itunesResult.primaryGenreName || '',
     previewUrl:     itunesResult.previewUrl      || '',
     spotifyTrackId: spotifyTrackId               || null,
+    tabUrls: {},
     tags,
     addedAt: Date.now(),
   });
@@ -483,6 +485,7 @@ function addSongFromSpotify(track, tags) {
     genre:          '',
     previewUrl:     '',
     spotifyTrackId: track.id,
+    tabUrls: {},
     tags,
     addedAt: Date.now(),
   });
@@ -543,9 +546,8 @@ async function searchItunes(query) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const spotifyLinkSection = (() => {
-  // Accepts:  https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC
-  //           https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=...
-  //           spotify:track:4uLU6hMCjMI75M1A2tKUQC
+  let _autoSelectedId = null;
+
   function parseTrackId(input) {
     if (!input) return null;
     const urlMatch = input.match(/open\.spotify\.com\/track\/([A-Za-z0-9]+)/);
@@ -556,11 +558,83 @@ const spotifyLinkSection = (() => {
   }
 
   function getSelectedId() {
+    if (_autoSelectedId) return _autoSelectedId;
     const val = document.getElementById('spotify-url-input')?.value?.trim() || '';
     return parseTrackId(val);
   }
 
+  function _getOrCreateResultsPanel() {
+    let panel = document.getElementById('spotify-auto-results');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id        = 'spotify-auto-results';
+      panel.className = 'spotify-auto-results';
+      const urlRow = document.querySelector('#modal-overlay .spotify-url-row');
+      if (urlRow) urlRow.parentElement.insertBefore(panel, urlRow);
+    }
+    return panel;
+  }
+
+  function _clearResultsPanel() {
+    const panel = document.getElementById('spotify-auto-results');
+    if (panel) panel.remove();
+    _autoSelectedId = null;
+  }
+
+  async function autoSearch(artist, title) {
+    _clearResultsPanel();
+    const token = await spotifyAuth.getValidToken();
+    if (!token) return;
+
+    const panel = _getOrCreateResultsPanel();
+    panel.innerHTML = '<p class="spotify-auto-empty">Searching Spotify…</p>';
+
+    try {
+      const results = await spotifyApi.searchTrack(`${artist} ${title}`, token);
+      panel.innerHTML = '';
+
+      if (!results.length) {
+        panel.innerHTML = '<p class="spotify-auto-empty">No Spotify matches — paste URL manually below.</p>';
+        return;
+      }
+
+      results.forEach((track, i) => {
+        const item = document.createElement('div');
+        item.className      = 'spotify-auto-item';
+        item.dataset.trackId = track.id;
+        if (i === 0) { item.classList.add('selected'); _autoSelectedId = track.id; }
+
+        const img = document.createElement('img');
+        img.className = 'spotify-auto-art';
+        img.src = track.artworkUrl || '';
+        img.alt = '';
+        img.onerror = () => { img.style.display = 'none'; };
+
+        const info = document.createElement('div');
+        info.className = 'spotify-auto-info';
+        const nm = document.createElement('span'); nm.className = 'spotify-auto-name';   nm.textContent = track.name;
+        const ar = document.createElement('span'); ar.className = 'spotify-auto-artist'; ar.textContent = track.artist;
+        info.append(nm, ar);
+
+        const ck = document.createElement('span');
+        ck.className   = 'spotify-auto-check';
+        ck.textContent = '✓';
+
+        item.append(img, info, ck);
+        item.addEventListener('click', () => {
+          panel.querySelectorAll('.spotify-auto-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          _autoSelectedId = track.id;
+        });
+        panel.appendChild(item);
+      });
+    } catch {
+      _clearResultsPanel();
+    }
+  }
+
   function reset() {
+    _clearResultsPanel();
     const input  = document.getElementById('spotify-url-input');
     const status = document.getElementById('spotify-url-status');
     if (input)  { input.value = ''; input.className = ''; }
@@ -573,7 +647,15 @@ const spotifyLinkSection = (() => {
     if (!input) return;
     input.addEventListener('input', () => {
       const val = input.value.trim();
-      if (!val) { input.className = ''; status.textContent = ''; return; }
+      if (!val) {
+        input.className = ''; status.textContent = '';
+        // Re-activate auto-selected item if present
+        const sel = document.querySelector('#spotify-auto-results .spotify-auto-item.selected');
+        _autoSelectedId = sel?.dataset.trackId || null;
+        return;
+      }
+      // Manual paste overrides auto-selection
+      _autoSelectedId = null;
       if (parseTrackId(val)) {
         input.className    = 'valid';
         status.textContent = '✓';
@@ -586,7 +668,7 @@ const spotifyLinkSection = (() => {
     });
   }
 
-  return { getSelectedId, reset, attachInputListener };
+  return { getSelectedId, reset, attachInputListener, autoSearch };
 })();
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -595,13 +677,16 @@ const spotifyLinkSection = (() => {
 
 function openAddModal(itunesResult) {
   pendingResult = itunesResult;
-  document.getElementById('modal-artwork').src         = (itunesResult.artworkUrl100 || '').replace('100x100bb','300x300bb');
-  document.getElementById('modal-song-title').textContent  = itunesResult.trackName      || '';
-  document.getElementById('modal-song-artist').textContent = itunesResult.artistName     || '';
-  document.getElementById('modal-song-album').textContent  = itunesResult.collectionName || '';
+  document.getElementById('modal-artwork').src              = (itunesResult.artworkUrl100 || '').replace('100x100bb','300x300bb');
+  document.getElementById('modal-song-title').textContent   = itunesResult.trackName      || '';
+  document.getElementById('modal-song-artist').textContent  = itunesResult.artistName     || '';
+  document.getElementById('modal-song-album').textContent   = itunesResult.collectionName || '';
   document.getElementById('tags-input').value = '';
+  spotifyLinkSection.reset();
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('tags-input').focus();
+  renderTagPicker('tag-picker', 'tags-input');
+  spotifyLinkSection.autoSearch(itunesResult.artistName || '', itunesResult.trackName || '');
 }
 
 function closeAddModal() {
@@ -613,6 +698,28 @@ function closeAddModal() {
 
 function parseTags(raw) {
   return [...new Set(raw.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0))];
+}
+
+function renderTagPicker(pickerId, inputId) {
+  const picker  = document.getElementById(pickerId);
+  const input   = document.getElementById(inputId);
+  if (!picker || !input) return;
+  const allTags    = getAllTags(library).map(t => t.tag);
+  const activeTags = parseTags(input.value);
+  picker.innerHTML = '';
+  for (const tag of allTags) {
+    const chip = document.createElement('span');
+    chip.className   = 'tag-picker-chip' + (activeTags.includes(tag) ? ' used' : '');
+    chip.textContent = tag;
+    chip.addEventListener('click', () => {
+      const current = parseTags(input.value);
+      input.value = current.includes(tag)
+        ? current.filter(t => t !== tag).join(', ')
+        : [...current, tag].join(', ');
+      renderTagPicker(pickerId, inputId);
+    });
+    picker.appendChild(chip);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -652,6 +759,7 @@ function openEditModal(songId) {
 
   document.getElementById('modal-edit').classList.remove('hidden');
   document.getElementById('edit-title-input').focus();
+  renderTagPicker('edit-tag-picker', 'edit-tags-input');
 }
 
 function closeEditModal() {
@@ -1058,6 +1166,105 @@ function showToast(msg, duration = 3000) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// SONG VIEW
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TAB_SOURCES = {
+  tab4u:     { searchUrl: (a, t) => `https://en.tab4u.com/resultsSimple?tab=songs&q=${encodeURIComponent(`${a} ${t}`).replace(/%20/g,'+')}` },
+  songsterr: { searchUrl: (a, t) => `https://www.songsterr.com/?pattern=${encodeURIComponent(`${a} ${t}`).replace(/%20/g,'+')}` },
+  ug:        { searchUrl: (a, t) => `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(`${a} ${t}`).replace(/%20/g,'+')}` },
+};
+
+function openSongView(songId) {
+  const song = library.find(s => s.id === songId);
+  if (!song) return;
+  viewingSongId = songId;
+
+  document.getElementById('sv-artwork').src       = song.artwork || '';
+  document.getElementById('sv-title').textContent  = song.title;
+  document.getElementById('sv-artist').textContent = song.artist;
+
+  for (const key of Object.keys(TAB_SOURCES)) {
+    document.getElementById(`sv-search-${key}`).href = TAB_SOURCES[key].searchUrl(song.artist, song.title);
+    const savedUrl = song.tabUrls?.[key] || null;
+    const savedRow = document.getElementById(`sv-saved-${key}`);
+    const openLink = document.getElementById(`sv-open-${key}`);
+    const urlInput = document.getElementById(`sv-url-${key}`);
+    if (savedUrl) {
+      openLink.href        = savedUrl;
+      openLink.textContent = 'Open saved tab ↗';
+      savedRow.classList.remove('hidden');
+    } else {
+      savedRow.classList.add('hidden');
+    }
+    urlInput.value = '';
+  }
+
+  _svSwitchTab('tab4u');
+  document.getElementById('song-view').classList.remove('hidden');
+
+  if (song.id !== currentSongId && (song.spotifyTrackId || song.previewUrl)) {
+    playSong(song);
+  }
+}
+
+function closeSongView() {
+  viewingSongId = null;
+  document.getElementById('song-view').classList.add('hidden');
+}
+
+function _svSwitchTab(key) {
+  document.querySelectorAll('.sv-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === key);
+  });
+  document.querySelectorAll('.sv-panel').forEach(panel => {
+    panel.classList.toggle('hidden', panel.dataset.panel !== key);
+  });
+}
+
+function _svSaveUrl(source) {
+  const song = library.find(s => s.id === viewingSongId);
+  if (!song) return;
+  const url = document.getElementById(`sv-url-${source}`).value.trim();
+  if (!url) { showToast('Paste a URL first.'); return; }
+  if (!song.tabUrls) song.tabUrls = {};
+  song.tabUrls[source] = url;
+  saveLibrary(library);
+  const savedRow = document.getElementById(`sv-saved-${source}`);
+  const openLink = document.getElementById(`sv-open-${source}`);
+  openLink.href        = url;
+  openLink.textContent = 'Open saved tab ↗';
+  savedRow.classList.remove('hidden');
+  document.getElementById(`sv-url-${source}`).value = '';
+  showToast('Saved.');
+}
+
+function _svClearUrl(source) {
+  const song = library.find(s => s.id === viewingSongId);
+  if (!song || !song.tabUrls) return;
+  delete song.tabUrls[source];
+  saveLibrary(library);
+  document.getElementById(`sv-saved-${source}`).classList.add('hidden');
+  showToast('URL removed.');
+}
+
+function attachSongViewListeners() {
+  document.getElementById('sv-back').addEventListener('click', closeSongView);
+  document.getElementById('sv-edit').addEventListener('click', () => {
+    if (viewingSongId) openEditModal(viewingSongId);
+  });
+  document.querySelectorAll('.sv-tab').forEach(btn => {
+    btn.addEventListener('click', () => _svSwitchTab(btn.dataset.tab));
+  });
+  document.querySelector('.sv-panels').addEventListener('click', e => {
+    const saveBtn  = e.target.closest('.sv-save-btn');
+    if (saveBtn)  { _svSaveUrl(saveBtn.dataset.source);   return; }
+    const clearBtn = e.target.closest('.sv-clear-btn');
+    if (clearBtn) { _svClearUrl(clearBtn.dataset.source); return; }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1093,7 +1300,13 @@ function attachListeners() {
     if (eb) { const row = eb.closest('.song-row'); if (row) openEditModal(row.dataset.id); return; }
 
     const chip = e.target.closest('[data-action="filter-tag"]');
-    if (chip) { activeTag = chip.dataset.tag; render(); }
+    if (chip) { activeTag = chip.dataset.tag; render(); return; }
+
+    // Open song view — click anywhere on row not captured above
+    const row = e.target.closest('.song-row');
+    if (row && !e.target.closest('button, a, [data-action]')) {
+      openSongView(row.dataset.id);
+    }
   });
 
   // Sidebar
@@ -1115,6 +1328,9 @@ function attachListeners() {
     document.getElementById('song-search-input').value = '';
     document.getElementById('search-results').classList.add('hidden');
   });
+
+  document.getElementById('tags-input').addEventListener('input', () => renderTagPicker('tag-picker', 'tags-input'));
+  document.getElementById('edit-tags-input').addEventListener('input', () => renderTagPicker('edit-tag-picker', 'edit-tags-input'));
 
   document.getElementById('modal-cancel').addEventListener('click', closeAddModal);
   document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddModal(); });
@@ -1142,6 +1358,7 @@ function attachListeners() {
     closeEditModal();
     render();
     showToast('Song updated.');
+    if (viewingSongId === song.id) openSongView(song.id);
   });
 
   document.getElementById('btn-edit-close').addEventListener('click', closeEditModal);
@@ -1207,6 +1424,7 @@ function attachListeners() {
       if (!document.getElementById('modal-import').classList.contains('hidden'))   { importModal.close();   return; }
       if (!document.getElementById('modal-edit').classList.contains('hidden'))     { closeEditModal();      return; }
       if (!document.getElementById('modal-overlay').classList.contains('hidden'))  { closeAddModal();       return; }
+      if (!document.getElementById('song-view').classList.contains('hidden'))      { closeSongView();       return; }
       const panel = document.getElementById('search-results');
       if (!panel.classList.contains('hidden')) {
         panel.classList.add('hidden');
@@ -1232,6 +1450,7 @@ async function init() {
 
   library = loadLibrary();
   attachListeners();
+  attachSongViewListeners();
   spotifyLinkSection.attachInputListener();
   updateHeaderButtons();
   settingsModal.updateStatus();

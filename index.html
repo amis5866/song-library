@@ -57,6 +57,7 @@
           Tags <span class="label-hint">(optional — comma-separated)</span>
         </label>
         <input type="text" id="tags-input" placeholder="rock, 80s, guitar solo" autocomplete="off">
+        <div id="tag-picker" class="tag-picker"></div>
 
         <!-- Spotify link section -->
         <div class="spotify-link-section">
@@ -177,6 +178,7 @@
           Tags <span class="label-hint">(comma-separated)</span>
         </label>
         <input type="text" id="edit-tags-input" placeholder="rock, 80s, guitar solo" autocomplete="off">
+        <div id="edit-tag-picker" class="tag-picker"></div>
         <div class="spotify-link-section">
           <label for="edit-spotify-url-input" class="spotify-link-heading">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:#1db954;vertical-align:middle;margin-right:5px"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
@@ -194,6 +196,68 @@
           <button type="button" id="edit-modal-cancel" class="btn-cancel">Cancel</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ─── Song View ───────────────────────────────────────────────────────────── -->
+  <div id="song-view" class="song-view hidden" role="dialog" aria-label="Song details">
+
+    <div class="sv-header">
+      <button id="sv-back" class="sv-back-btn">&#8592; Back</button>
+      <div class="sv-header-meta">
+        <img id="sv-artwork" class="sv-artwork" src="" alt="">
+        <div class="sv-title-block">
+          <span id="sv-title" class="sv-title"></span>
+          <span id="sv-artist" class="sv-artist"></span>
+        </div>
+      </div>
+      <button id="sv-edit" class="sv-edit-btn" title="Edit song">&#9998; Edit</button>
+    </div>
+
+    <div class="sv-tabs">
+      <button class="sv-tab active" data-tab="tab4u">tab4u</button>
+      <button class="sv-tab" data-tab="songsterr">Songsterr</button>
+      <button class="sv-tab" data-tab="ug">Ultimate Guitar</button>
+    </div>
+
+    <div class="sv-panels">
+
+      <div id="sv-panel-tab4u" class="sv-panel" data-panel="tab4u">
+        <a id="sv-search-tab4u" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on tab4u &#8599;</a>
+        <div id="sv-saved-tab4u" class="sv-saved-row hidden">
+          <a id="sv-open-tab4u" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
+          <button class="sv-clear-btn" data-source="tab4u" title="Remove saved URL">&#215;</button>
+        </div>
+        <div class="sv-url-save-row">
+          <input type="url" id="sv-url-tab4u" class="sv-url-input" placeholder="Paste a tab4u page URL to save it…" autocomplete="off">
+          <button class="sv-save-btn btn-primary" data-source="tab4u">Save</button>
+        </div>
+      </div>
+
+      <div id="sv-panel-songsterr" class="sv-panel hidden" data-panel="songsterr">
+        <a id="sv-search-songsterr" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Songsterr &#8599;</a>
+        <div id="sv-saved-songsterr" class="sv-saved-row hidden">
+          <a id="sv-open-songsterr" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
+          <button class="sv-clear-btn" data-source="songsterr" title="Remove saved URL">&#215;</button>
+        </div>
+        <div class="sv-url-save-row">
+          <input type="url" id="sv-url-songsterr" class="sv-url-input" placeholder="Paste a Songsterr page URL to save it…" autocomplete="off">
+          <button class="sv-save-btn btn-primary" data-source="songsterr">Save</button>
+        </div>
+      </div>
+
+      <div id="sv-panel-ug" class="sv-panel hidden" data-panel="ug">
+        <a id="sv-search-ug" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Ultimate Guitar &#8599;</a>
+        <div id="sv-saved-ug" class="sv-saved-row hidden">
+          <a id="sv-open-ug" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
+          <button class="sv-clear-btn" data-source="ug" title="Remove saved URL">&#215;</button>
+        </div>
+        <div class="sv-url-save-row">
+          <input type="url" id="sv-url-ug" class="sv-url-input" placeholder="Paste an Ultimate Guitar page URL to save it…" autocomplete="off">
+          <button class="sv-save-btn btn-primary" data-source="ug">Save</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
