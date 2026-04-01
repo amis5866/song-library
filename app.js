@@ -1089,8 +1089,14 @@ function stopPlayer() {
 }
 
 function togglePlay() {
-  if (playerMode !== 'itunes') return;
-  if (audio.paused) audio.play(); else audio.pause();
+  if (playerMode === 'itunes') {
+    if (audio.paused) audio.play(); else audio.pause();
+  } else if (playerMode === 'spotify') {
+    const iframe = document.getElementById('spotify-embed-iframe');
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ command: 'toggle' }, 'https://open.spotify.com');
+    }
+  }
 }
 
 function seekRelative(delta) {
@@ -1187,24 +1193,38 @@ function openSongView(songId) {
   for (const key of Object.keys(TAB_SOURCES)) {
     document.getElementById(`sv-search-${key}`).href = TAB_SOURCES[key].searchUrl(song.artist, song.title);
     const savedUrl = song.tabUrls?.[key] || null;
-    const savedRow = document.getElementById(`sv-saved-${key}`);
-    const openLink = document.getElementById(`sv-open-${key}`);
-    const urlInput = document.getElementById(`sv-url-${key}`);
-    if (savedUrl) {
-      openLink.href        = savedUrl;
-      openLink.textContent = 'Open saved tab ↗';
-      savedRow.classList.remove('hidden');
-    } else {
-      savedRow.classList.add('hidden');
-    }
-    urlInput.value = '';
+    _svApplyUrl(key, savedUrl);
+    document.getElementById(`sv-url-${key}`).value = '';
   }
 
   _svSwitchTab('tab4u');
-  document.getElementById('song-view').classList.remove('hidden');
+  const view = document.getElementById('song-view');
+  view.classList.remove('hidden');
+  view.focus();
 
   if (song.id !== currentSongId && (song.spotifyTrackId || song.previewUrl)) {
     playSong(song);
+  }
+}
+
+function _svApplyUrl(source, url) {
+  const openLink  = document.getElementById(`sv-open-${source}`);
+  const clearBtn  = document.getElementById(`sv-clear-${source}`);
+  const iframe    = document.getElementById(`sv-iframe-${source}`);
+  const notice    = document.getElementById(`sv-iframe-notice-${source}`);
+  if (url) {
+    openLink.href = url;
+    openLink.classList.remove('hidden');
+    clearBtn.classList.remove('hidden');
+    iframe.src = url;
+    iframe.classList.remove('hidden');
+    notice.classList.remove('hidden');
+  } else {
+    openLink.classList.add('hidden');
+    clearBtn.classList.add('hidden');
+    iframe.src = '';
+    iframe.classList.add('hidden');
+    notice.classList.add('hidden');
   }
 }
 
@@ -1230,21 +1250,18 @@ function _svSaveUrl(source) {
   if (!song.tabUrls) song.tabUrls = {};
   song.tabUrls[source] = url;
   saveLibrary(library);
-  const savedRow = document.getElementById(`sv-saved-${source}`);
-  const openLink = document.getElementById(`sv-open-${source}`);
-  openLink.href        = url;
-  openLink.textContent = 'Open saved tab ↗';
-  savedRow.classList.remove('hidden');
+  _svApplyUrl(source, url);
   document.getElementById(`sv-url-${source}`).value = '';
   showToast('Saved.');
 }
 
 function _svClearUrl(source) {
   const song = library.find(s => s.id === viewingSongId);
-  if (!song || !song.tabUrls) return;
+  if (!song) return;
+  if (!song.tabUrls) song.tabUrls = {};
   delete song.tabUrls[source];
   saveLibrary(library);
-  document.getElementById(`sv-saved-${source}`).classList.add('hidden');
+  _svApplyUrl(source, null);
   showToast('URL removed.');
 }
 

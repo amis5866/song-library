@@ -200,7 +200,7 @@
   </div>
 
   <!-- ─── Song View ───────────────────────────────────────────────────────────── -->
-  <div id="song-view" class="song-view hidden" role="dialog" aria-label="Song details">
+  <div id="song-view" class="song-view hidden" role="dialog" aria-label="Song details" tabindex="-1">
 
     <div class="sv-header">
       <button id="sv-back" class="sv-back-btn">&#8592; Back</button>
@@ -223,39 +223,45 @@
     <div class="sv-panels">
 
       <div id="sv-panel-tab4u" class="sv-panel" data-panel="tab4u">
-        <a id="sv-search-tab4u" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on tab4u &#8599;</a>
-        <div id="sv-saved-tab4u" class="sv-saved-row hidden">
-          <a id="sv-open-tab4u" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
-          <button class="sv-clear-btn" data-source="tab4u" title="Remove saved URL">&#215;</button>
+        <div class="sv-top-row">
+          <a id="sv-search-tab4u" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on tab4u &#8599;</a>
+          <a id="sv-open-tab4u" class="btn-text sv-open-link hidden" href="#" target="_blank" rel="noopener noreferrer">Open in new tab &#8599;</a>
+          <button class="sv-clear-btn hidden" id="sv-clear-tab4u" data-source="tab4u" title="Remove saved URL">&#215; Remove</button>
         </div>
         <div class="sv-url-save-row">
-          <input type="url" id="sv-url-tab4u" class="sv-url-input" placeholder="Paste a tab4u page URL to save it…" autocomplete="off">
+          <input type="url" id="sv-url-tab4u" class="sv-url-input" placeholder="Paste a tab4u page URL to embed it…" autocomplete="off">
           <button class="sv-save-btn btn-primary" data-source="tab4u">Save</button>
         </div>
+        <iframe id="sv-iframe-tab4u" class="sv-iframe hidden" src="" frameborder="0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        <p id="sv-iframe-notice-tab4u" class="sv-iframe-notice hidden">This site may block embedding. Use "Open in new tab" if the content doesn't appear.</p>
       </div>
 
       <div id="sv-panel-songsterr" class="sv-panel hidden" data-panel="songsterr">
-        <a id="sv-search-songsterr" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Songsterr &#8599;</a>
-        <div id="sv-saved-songsterr" class="sv-saved-row hidden">
-          <a id="sv-open-songsterr" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
-          <button class="sv-clear-btn" data-source="songsterr" title="Remove saved URL">&#215;</button>
+        <div class="sv-top-row">
+          <a id="sv-search-songsterr" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Songsterr &#8599;</a>
+          <a id="sv-open-songsterr" class="btn-text sv-open-link hidden" href="#" target="_blank" rel="noopener noreferrer">Open in new tab &#8599;</a>
+          <button class="sv-clear-btn hidden" id="sv-clear-songsterr" data-source="songsterr" title="Remove saved URL">&#215; Remove</button>
         </div>
         <div class="sv-url-save-row">
-          <input type="url" id="sv-url-songsterr" class="sv-url-input" placeholder="Paste a Songsterr page URL to save it…" autocomplete="off">
+          <input type="url" id="sv-url-songsterr" class="sv-url-input" placeholder="Paste a Songsterr page URL to embed it…" autocomplete="off">
           <button class="sv-save-btn btn-primary" data-source="songsterr">Save</button>
         </div>
+        <iframe id="sv-iframe-songsterr" class="sv-iframe hidden" src="" frameborder="0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        <p id="sv-iframe-notice-songsterr" class="sv-iframe-notice hidden">This site may block embedding. Use "Open in new tab" if the content doesn't appear.</p>
       </div>
 
       <div id="sv-panel-ug" class="sv-panel hidden" data-panel="ug">
-        <a id="sv-search-ug" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Ultimate Guitar &#8599;</a>
-        <div id="sv-saved-ug" class="sv-saved-row hidden">
-          <a id="sv-open-ug" class="btn-text sv-open-link" href="#" target="_blank" rel="noopener noreferrer">Open saved tab &#8599;</a>
-          <button class="sv-clear-btn" data-source="ug" title="Remove saved URL">&#215;</button>
+        <div class="sv-top-row">
+          <a id="sv-search-ug" class="sv-search-link btn-primary" href="#" target="_blank" rel="noopener noreferrer">Search on Ultimate Guitar &#8599;</a>
+          <a id="sv-open-ug" class="btn-text sv-open-link hidden" href="#" target="_blank" rel="noopener noreferrer">Open in new tab &#8599;</a>
+          <button class="sv-clear-btn hidden" id="sv-clear-ug" data-source="ug" title="Remove saved URL">&#215; Remove</button>
         </div>
         <div class="sv-url-save-row">
-          <input type="url" id="sv-url-ug" class="sv-url-input" placeholder="Paste an Ultimate Guitar page URL to save it…" autocomplete="off">
+          <input type="url" id="sv-url-ug" class="sv-url-input" placeholder="Paste an Ultimate Guitar page URL to embed it…" autocomplete="off">
           <button class="sv-save-btn btn-primary" data-source="ug">Save</button>
         </div>
+        <iframe id="sv-iframe-ug" class="sv-iframe hidden" src="" frameborder="0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        <p id="sv-iframe-notice-ug" class="sv-iframe-notice hidden">This site may block embedding. Use "Open in new tab" if the content doesn't appear.</p>
       </div>
 
     </div>
