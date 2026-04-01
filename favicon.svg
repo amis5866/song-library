@@ -1,27 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- Guitar body -->
-  <ellipse cx="32" cy="44" rx="14" ry="16" fill="#c8823a"/>
-  <ellipse cx="32" cy="44" rx="10" ry="12" fill="#e09a4a"/>
-  <!-- Waist -->
-  <rect x="27" y="34" width="10" height="8" fill="#c8823a"/>
-  <!-- Upper bout -->
-  <ellipse cx="32" cy="32" rx="10" ry="10" fill="#c8823a"/>
-  <ellipse cx="32" cy="32" rx="7" ry="7" fill="#e09a4a"/>
-  <!-- Sound hole -->
-  <circle cx="32" cy="44" r="4" fill="#7a4a1a"/>
+  <!-- Strat body - asymmetric double cutaway -->
+  <path d="M22 52 Q14 50 13 42 Q12 35 18 31 Q15 27 16 22 Q17 17 22 17 Q25 15 26 18 L28 22 L36 22 L38 18 Q39 15 42 17 Q47 17 48 22 Q49 27 46 31 Q52 35 51 42 Q50 50 42 52 Q36 56 32 55 Q28 56 22 52 Z" fill="#5bb8e8"/>
+  <!-- Body shading/contour -->
+  <path d="M24 50 Q17 47 17 41 Q17 36 21 33 Q19 29 20 24 Q21 20 24 20 Q26 19 27 21 L29 24 L35 24 L37 21 Q38 19 40 20 Q43 20 44 24 Q45 29 43 33 Q47 36 47 41 Q47 47 40 50 Q36 53 32 52 Q28 53 24 50 Z" fill="#7dcbf0"/>
+  <!-- Pickguard - white -->
+  <path d="M24 48 Q19 45 19 40 Q19 36 22 33 L26 24 L38 24 L42 33 Q45 36 45 40 Q45 45 40 48 Q36 51 32 50 Q28 51 24 48 Z" fill="rgba(255,255,255,0.35)"/>
+  <!-- Pickups (3 single coils) -->
+  <rect x="27" y="27" width="10" height="3" rx="1" fill="#222"/>
+  <rect x="27" y="32" width="10" height="3" rx="1" fill="#222"/>
+  <rect x="27" y="37" width="10" height="3" rx="1" fill="#222"/>
+  <!-- Bridge -->
+  <rect x="28" y="43" width="8" height="3" rx="1" fill="#aaa"/>
   <!-- Neck -->
-  <rect x="29.5" y="8" width="5" height="26" rx="2" fill="#a0622a"/>
+  <rect x="29" y="6" width="6" height="18" rx="2" fill="#c8a05a"/>
+  <!-- Frets -->
+  <line x1="29" y1="10" x2="35" y2="10" stroke="#ddd" stroke-width="0.7"/>
+  <line x1="29" y1="13" x2="35" y2="13" stroke="#ddd" stroke-width="0.7"/>
+  <line x1="29" y1="16" x2="35" y2="16" stroke="#ddd" stroke-width="0.7"/>
+  <line x1="29" y1="19" x2="35" y2="19" stroke="#ddd" stroke-width="0.7"/>
   <!-- Headstock -->
-  <rect x="28" y="4" width="8" height="8" rx="2" fill="#8a5220"/>
-  <!-- Tuning pegs -->
-  <circle cx="26" cy="6" r="2" fill="#888"/>
-  <circle cx="38" cy="6" r="2" fill="#888"/>
-  <circle cx="26" cy="10" r="2" fill="#888"/>
-  <circle cx="38" cy="10" r="2" fill="#888"/>
+  <path d="M27 3 Q26 2 27 1 L37 1 Q38 2 37 3 L37 8 L27 8 Z" fill="#b08040"/>
+  <!-- Tuning pegs - 3 left, 3 right strat style -->
+  <circle cx="25" cy="2" r="1.8" fill="#999"/>
+  <circle cx="25" cy="4.5" r="1.8" fill="#999"/>
+  <circle cx="25" cy="7" r="1.8" fill="#999"/>
+  <circle cx="39" cy="2" r="1.8" fill="#999"/>
+  <circle cx="39" cy="4.5" r="1.8" fill="#999"/>
+  <circle cx="39" cy="7" r="1.8" fill="#999"/>
   <!-- Strings -->
-  <line x1="30" y1="8" x2="30" y2="40" stroke="#d4b896" stroke-width="0.5" opacity="0.7"/>
-  <line x1="32" y1="8" x2="32" y2="40" stroke="#d4b896" stroke-width="0.5" opacity="0.7"/>
-  <line x1="34" y1="8" x2="34" y2="40" stroke="#d4b896" stroke-width="0.5" opacity="0.7"/>
-  <!-- Nut -->
-  <rect x="28.5" y="22" width="7" height="1.5" rx="0.5" fill="#f0e0c0"/>
+  <line x1="29.5" y1="2" x2="29.5" y2="43" stroke="#ccc" stroke-width="0.4" opacity="0.8"/>
+  <line x1="31"   y1="2" x2="31"   y2="43" stroke="#ccc" stroke-width="0.4" opacity="0.8"/>
+  <line x1="32"   y1="2" x2="32"   y2="43" stroke="#ccc" stroke-width="0.4" opacity="0.8"/>
+  <line x1="33"   y1="2" x2="33"   y2="43" stroke="#ccc" stroke-width="0.4" opacity="0.8"/>
+  <line x1="34.5" y1="2" x2="34.5" y2="43" stroke="#ccc" stroke-width="0.4" opacity="0.8"/>
+  <!-- Volume/tone knobs -->
+  <circle cx="41" cy="35" r="2" fill="#ddd"/>
+  <circle cx="41" cy="40" r="2" fill="#ddd"/>
+  <!-- Output jack -->
+  <circle cx="44" cy="46" r="1.5" fill="#999"/>
 </svg>
