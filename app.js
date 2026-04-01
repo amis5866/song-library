@@ -1207,18 +1207,22 @@ function openSongView(songId) {
   }
 }
 
+const IFRAME_SUPPORTED = { tab4u: true, songsterr: false, ug: false };
+
 function _svApplyUrl(source, url) {
-  const openLink  = document.getElementById(`sv-open-${source}`);
-  const clearBtn  = document.getElementById(`sv-clear-${source}`);
-  const iframe    = document.getElementById(`sv-iframe-${source}`);
-  const notice    = document.getElementById(`sv-iframe-notice-${source}`);
+  const openLink = document.getElementById(`sv-open-${source}`);
+  const clearBtn = document.getElementById(`sv-clear-${source}`);
+  const iframe   = document.getElementById(`sv-iframe-${source}`);
+  const notice   = document.getElementById(`sv-iframe-notice-${source}`);
   if (url) {
     openLink.href = url;
     openLink.classList.remove('hidden');
     clearBtn.classList.remove('hidden');
-    iframe.src = url;
-    iframe.classList.remove('hidden');
-    notice.classList.remove('hidden');
+    if (IFRAME_SUPPORTED[source]) {
+      iframe.src = url;
+      iframe.classList.remove('hidden');
+      notice.classList.remove('hidden');
+    }
   } else {
     openLink.classList.add('hidden');
     clearBtn.classList.add('hidden');
