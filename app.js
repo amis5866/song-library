@@ -245,7 +245,207 @@ function loadLibrary() {
 
 function saveLibrary(songs) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+  gistSync.push(songs);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GIST SYNC
+// ═══════════════════════════════════════════════════════════════════════════
+
+const gistSync = (() => {
+  const GIST_FILE  = 'song-library.json';
+  const KEY_TOKEN  = 'gist_token';
+  const KEY_ID     = 'gist_id';
+  const KEY_SYNCED = 'gist_last_synced';
+
+  let _pushTimer = null;
+
+  function loadConfig() {
+    return {
+      token:     localStorage.getItem(KEY_TOKEN) || '',
+      gistId:    localStorage.getItem(KEY_ID)    || '',
+      lastSynced:localStorage.getItem(KEY_SYNCED)|| '',
+    };
+  }
+
+  function saveConfig(token, gistId) {
+    localStorage.setItem(KEY_TOKEN, token);
+    localStorage.setItem(KEY_ID,    gistId);
+  }
+
+  function clearConfig() {
+    [KEY_TOKEN, KEY_ID, KEY_SYNCED].forEach(k => localStorage.removeItem(k));
+  }
+
+  function _headers(token) {
+    return { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' };
+  }
+
+  async function _createGist(token, data) {
+    const res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: _headers(token),
+      body: JSON.stringify({
+        description: 'Song Library Data',
+        public: false,
+        files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } },
+      }),
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status}`);
+    return (await res.json()).id;
+  }
+
+  async function _updateGist(token, gistId, data) {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: _headers(token),
+      body: JSON.stringify({
+        files: { [GIST_FILE]: { content: JSON.stringify(data, null, 2) } },
+      }),
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  }
+
+  async function _fetchGist(token, gistId) {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: _headers(token),
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status}`);
+    const data = await res.json();
+    const raw  = data.files?.[GIST_FILE]?.content;
+    if (!raw) throw new Error('Gist file not found');
+    return JSON.parse(raw);
+  }
+
+  function _setBadge(state, msg) {
+    const badge = document.getElementById('gist-status-badge');
+    if (!badge) return;
+    badge.textContent = msg;
+    badge.className   = 'status-badge';
+    if (state === 'connected') badge.classList.add('status-badge--connected');
+    else if (state === 'syncing') badge.classList.add('status-badge--syncing');
+    else if (state === 'error')   badge.classList.add('status-badge--error');
+    else badge.classList.add('status-badge--disconnected');
+  }
+
+  function _setLastSynced(ts) {
+    localStorage.setItem(KEY_SYNCED, ts);
+    const el = document.getElementById('gist-last-synced');
+    if (el) el.textContent = ts ? `Last synced: ${ts}` : '';
+  }
+
+  function updateSettingsUI() {
+    const cfg     = loadConfig();
+    const form    = document.getElementById('settings-gist-form');
+    const btnCon  = document.getElementById('btn-connect-gist');
+    const btnSync = document.getElementById('btn-sync-now');
+    const btnDis  = document.getElementById('btn-disconnect-gist');
+    if (!form) return;
+
+    const el = document.getElementById('gist-last-synced');
+    if (el) el.textContent = cfg.lastSynced ? `Last synced: ${cfg.lastSynced}` : '';
+
+    if (cfg.token && cfg.gistId) {
+      _setBadge('connected', 'Connected');
+      form.classList.add('hidden');
+      btnCon.classList.add('hidden');
+      btnSync.classList.remove('hidden');
+      btnDis.classList.remove('hidden');
+    } else {
+      _setBadge('disconnected', 'Not connected');
+      form.classList.remove('hidden');
+      btnCon.classList.remove('hidden');
+      btnSync.classList.add('hidden');
+      btnDis.classList.add('hidden');
+      if (cfg.token) document.getElementById('input-gist-token').value = cfg.token;
+      if (cfg.gistId) document.getElementById('input-gist-id').value = cfg.gistId;
+    }
+  }
+
+  // Debounced push — waits 2s after last save before pushing
+  function push(songs) {
+    const cfg = loadConfig();
+    if (!cfg.token) return;
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => _doPush(songs, cfg), 2000);
+  }
+
+  async function _doPush(songs, cfg) {
+    _setBadge('syncing', 'Syncing…');
+    try {
+      let gistId = cfg.gistId;
+      if (!gistId) {
+        gistId = await _createGist(cfg.token, songs);
+        localStorage.setItem(KEY_ID, gistId);
+      } else {
+        await _updateGist(cfg.token, gistId, songs);
+      }
+      const ts = new Date().toLocaleString();
+      _setLastSynced(ts);
+      _setBadge('connected', 'Connected');
+    } catch (e) {
+      _setBadge('error', 'Sync failed');
+      console.error('Gist push failed:', e);
+    }
+  }
+
+  async function pull() {
+    const cfg = loadConfig();
+    if (!cfg.token || !cfg.gistId) return null;
+    try {
+      const data = await _fetchGist(cfg.token, cfg.gistId);
+      return Array.isArray(data) ? data : null;
+    } catch (e) {
+      console.error('Gist pull failed:', e);
+      return null;
+    }
+  }
+
+  async function connect() {
+    const token  = document.getElementById('input-gist-token').value.trim();
+    const gistId = document.getElementById('input-gist-id').value.trim();
+    if (!token) { showToast('Enter your GitHub token first.'); return; }
+
+    _setBadge('syncing', 'Connecting…');
+    try {
+      // Validate token
+      const check = await fetch('https://api.github.com/user', { headers: _headers(token) });
+      if (!check.ok) throw new Error('Invalid token');
+
+      if (gistId) {
+        // Existing gist — pull it and replace local library
+        const remote = await _fetchGist(token, gistId);
+        saveConfig(token, gistId);
+        library = remote;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+        render();
+        const ts = new Date().toLocaleString();
+        _setLastSynced(ts);
+        showToast(`Synced — ${library.length} songs loaded.`);
+      } else {
+        // New gist — push current library
+        saveConfig(token, '');
+        const newId = await _createGist(token, library);
+        localStorage.setItem(KEY_ID, newId);
+        const ts = new Date().toLocaleString();
+        _setLastSynced(ts);
+        showToast('Gist created and library synced!');
+      }
+      updateSettingsUI();
+    } catch (e) {
+      _setBadge('error', 'Connection failed');
+      showToast('Connection failed — check your token and try again.');
+    }
+  }
+
+  function disconnect() {
+    clearConfig();
+    updateSettingsUI();
+    showToast('Sync disconnected. Library stays on this device.');
+  }
+
+  return { push, pull, connect, disconnect, updateSettingsUI, loadConfig };
+})();
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TAGS
@@ -783,6 +983,7 @@ const settingsModal = (() => {
       document.getElementById('input-spotify-redirect-uri').value = '';
     }
     updateStatus();
+    gistSync.updateSettingsUI();
     document.getElementById('modal-settings').classList.remove('hidden');
   }
 
@@ -1403,6 +1604,14 @@ function attachListeners() {
     }
   });
 
+  // Gist sync buttons
+  document.getElementById('btn-connect-gist').addEventListener('click', gistSync.connect);
+  document.getElementById('btn-sync-now').addEventListener('click', () => {
+    gistSync.push(library);
+    showToast('Syncing…');
+  });
+  document.getElementById('btn-disconnect-gist').addEventListener('click', gistSync.disconnect);
+
   // Settings modal
   document.getElementById('btn-settings').addEventListener('click', settingsModal.open);
   document.getElementById('btn-settings-close').addEventListener('click', settingsModal.close);
@@ -1470,11 +1679,20 @@ async function init() {
   const wasCallback = await spotifyAuth.handleOAuthCallback();
 
   library = loadLibrary();
+
+  // Pull from Gist if configured — remote is authoritative
+  const remote = await gistSync.pull();
+  if (remote) {
+    library = remote;
+    localStorage.setItem('songLibrary', JSON.stringify(library));
+  }
+
   attachListeners();
   attachSongViewListeners();
   spotifyLinkSection.attachInputListener();
   updateHeaderButtons();
   settingsModal.updateStatus();
+  gistSync.updateSettingsUI();
   render();
 
   if (wasCallback) settingsModal.updateStatus();

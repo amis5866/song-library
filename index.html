@@ -132,6 +132,35 @@
           <button id="btn-disconnect-spotify" class="btn-danger hidden">Disconnect</button>
         </div>
       </div>
+
+      <div class="settings-section settings-section--bordered">
+        <h3 class="settings-section-title">Library Sync (GitHub Gist)</h3>
+        <p class="settings-section-desc">Sync your library across all devices. Requires a free GitHub account.</p>
+
+        <div class="settings-status-row">
+          <span>Status:</span>
+          <span id="gist-status-badge" class="status-badge status-badge--disconnected">Not connected</span>
+          <span id="gist-last-synced" class="gist-last-synced"></span>
+        </div>
+
+        <div id="settings-gist-form" class="settings-form">
+          <label class="settings-label">
+            GitHub Token <span class="settings-label-hint">needs <code>gist</code> scope — <a href="https://github.com/settings/tokens/new?scopes=gist&description=Song+Library+Sync" target="_blank" rel="noopener noreferrer">create one here</a></span>
+            <input type="password" id="input-gist-token" placeholder="ghp_..." autocomplete="off">
+          </label>
+          <label class="settings-label">
+            Gist ID <span class="settings-label-hint">(leave blank to create a new one automatically)</span>
+            <input type="text" id="input-gist-id" placeholder="auto-created on first sync" autocomplete="off">
+          </label>
+        </div>
+
+        <div class="settings-actions">
+          <button id="btn-connect-gist" class="btn-primary">Connect &amp; Sync</button>
+          <button id="btn-sync-now" class="btn-primary hidden">Sync Now</button>
+          <button id="btn-disconnect-gist" class="btn-danger hidden">Disconnect</button>
+        </div>
+      </div>
+
     </div>
   </div>
 

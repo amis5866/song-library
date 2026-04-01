@@ -796,7 +796,28 @@ main {
 }
 .btn-copy:hover { color: var(--text-primary); border-color: var(--accent); }
 
-.settings-actions { display: flex; gap: 0.75rem; }
+.settings-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.settings-section--bordered {
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+.settings-section-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+.settings-section-desc a { color: var(--accent); }
+.gist-last-synced {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  opacity: 0.75;
+}
+.status-badge--syncing { background: rgba(124,106,247,0.15); color: var(--accent); }
+.status-badge--error   { background: rgba(224,92,106,0.15);  color: var(--danger); }
 
 /* ─── Import Playlist Modal ──────────────────────────────────────────────── */
 .import-url-row {
