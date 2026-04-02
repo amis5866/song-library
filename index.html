@@ -31,10 +31,10 @@
   </div>
 
   <header>
-    <h1>My Song Library</h1>
+    <h1 id="app-title">My Song Library</h1>
+    <button id="btn-add-song" class="btn-add-song" title="Add a song">&#43;</button>
     <input type="search" id="header-filter" placeholder="Filter by title, artist, or tag...">
     <div class="header-actions">
-      <button id="btn-import-playlist" class="btn-import hidden">Import Playlist</button>
       <div id="user-info" class="user-info hidden">
         <img id="user-avatar" class="user-avatar" src="" alt="">
         <span id="user-name" class="user-name"></span>
@@ -56,7 +56,7 @@
     <main>
 
       <!-- Add song search -->
-      <div class="search-wrapper">
+      <div class="search-wrapper hidden">
         <input type="search" id="song-search-input" autocomplete="off" placeholder="Search for a song to add to your library...">
         <div id="search-results" class="search-results hidden"></div>
       </div>
@@ -156,6 +156,9 @@
         <div class="settings-actions">
           <button id="btn-connect-spotify" class="btn-primary">Connect Spotify</button>
           <button id="btn-disconnect-spotify" class="btn-danger hidden">Disconnect</button>
+        </div>
+        <div id="settings-import-row" class="settings-import-row hidden">
+          <button id="btn-open-import" class="btn-import-settings">Import Playlist</button>
         </div>
       </div>
 

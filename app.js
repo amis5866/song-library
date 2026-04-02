@@ -850,11 +850,12 @@ const settingsModal = (() => {
   }
 
   function updateStatus() {
-    const t      = spotifyAuth.loadTokens();
-    const badge  = document.getElementById('spotify-status-badge');
-    const form   = document.getElementById('settings-spotify-form');
-    const btnCon = document.getElementById('btn-connect-spotify');
-    const btnDis = document.getElementById('btn-disconnect-spotify');
+    const t         = spotifyAuth.loadTokens();
+    const badge     = document.getElementById('spotify-status-badge');
+    const form      = document.getElementById('settings-spotify-form');
+    const btnCon    = document.getElementById('btn-connect-spotify');
+    const btnDis    = document.getElementById('btn-disconnect-spotify');
+    const importRow = document.getElementById('settings-import-row');
 
     if (t?.accessToken) {
       badge.textContent = 'Connected';
@@ -862,12 +863,14 @@ const settingsModal = (() => {
       form.classList.add('hidden');
       btnCon.classList.add('hidden');
       btnDis.classList.remove('hidden');
+      importRow.classList.remove('hidden');
     } else {
       badge.textContent = 'Not connected';
       badge.className   = 'status-badge status-badge--disconnected';
       form.classList.remove('hidden');
       btnCon.classList.remove('hidden');
       btnDis.classList.add('hidden');
+      importRow.classList.add('hidden');
     }
 
     updateHeaderButtons();
@@ -1207,10 +1210,7 @@ audio.addEventListener('durationchange', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function updateHeaderButtons() {
-  const t   = spotifyAuth.loadTokens();
-  const btn = document.getElementById('btn-import-playlist');
-  if (t?.accessToken) btn.classList.remove('hidden');
-  else                btn.classList.add('hidden');
+  // Import Playlist is now inside the Settings modal — nothing to toggle here
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1387,6 +1387,27 @@ function attachSongViewListeners() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function attachListeners() {
+  // App title — clear all filters
+  document.getElementById('app-title').addEventListener('click', () => {
+    activeTag   = null;
+    filterQuery = '';
+    document.getElementById('header-filter').value = '';
+    render();
+  });
+
+  // Add song button — toggle search wrapper
+  document.getElementById('btn-add-song').addEventListener('click', () => {
+    const wrapper = document.querySelector('.search-wrapper');
+    const isHidden = wrapper.classList.contains('hidden');
+    wrapper.classList.toggle('hidden');
+    if (isHidden) {
+      document.getElementById('song-search-input').focus();
+    } else {
+      document.getElementById('song-search-input').value = '';
+      document.getElementById('search-results').classList.add('hidden');
+    }
+  });
+
   // Header filter
   document.getElementById('header-filter').addEventListener('input', e => {
     filterQuery = e.target.value;
@@ -1445,6 +1466,7 @@ function attachListeners() {
     closeAddModal();
     document.getElementById('song-search-input').value = '';
     document.getElementById('search-results').classList.add('hidden');
+    document.querySelector('.search-wrapper').classList.add('hidden');
   });
 
   document.getElementById('tags-input').addEventListener('input', () => renderTagPicker('tag-picker', 'tags-input'));
@@ -1516,8 +1538,11 @@ function attachListeners() {
     navigator.clipboard.writeText(val).then(() => showToast('Redirect URI copied!'));
   });
 
-  // Import playlist modal
-  document.getElementById('btn-import-playlist').addEventListener('click', importModal.open);
+  // Import playlist — now triggered from settings modal
+  document.getElementById('btn-open-import').addEventListener('click', () => {
+    settingsModal.close();
+    importModal.open();
+  });
   document.getElementById('btn-import-close').addEventListener('click', importModal.close);
   document.getElementById('btn-import-cancel').addEventListener('click', importModal.close);
   document.getElementById('modal-import').addEventListener('click', e => { if (e.target === e.currentTarget) importModal.close(); });
